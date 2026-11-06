@@ -84,6 +84,16 @@ A contribution or PR does not authorize deployment, service restarts, production
 - Production preparation: `npm run production:setup -- --dry-run`, then setup only on the intended host after approved environment configuration and backup. `npm run production:start` serves a prebuilt release without migration. See README and docs/deployment.md. Do not claim real deployment/live OAuth or organizer rehearsal passed unless performed. No assumed domain or credentials.
 - Routine updates use `scripts/update.sh --ref FULL_REVIEWED_COMMIT_SHA --apply` from a clean operator checkout, with single-host locking, a new release directory, verified backup, migration history/target checks, systemd switching and exact-release local/public health. Preserve its fail-closed recovery and secret isolation. Never build over the serving release or automatically restore/down-migrate a live DB.
 
+## Cursor Cloud specific instructions
+
+Cloud Agent machines install Node.js 24 under `/usr/local/node/bin` and put that directory first on `PATH` for login shells. PostgreSQL 17 listens on `127.0.0.1:55434`.
+
+- The preview database is `oclr_frontend_test`. When `.env.local` is absent, boot writes `APP_URL`, `DATABASE_URL`, and `OCLR_DEVELOPMENT_DATABASE_URL` for that loopback database and leaves an existing file untouched. Never commit or print `.env.local`.
+- The disposable test database is `oclr_test`. For `npm test`, set `TEST_DATABASE_URL` from `/var/lib/oclr-dev/test-database-url` and migrate that URL when the branch schema is ahead. The destructive-test guard rejects `oclr_frontend_test`.
+- Boot migrates the preview database, runs `npm run db:seed:dev`, migrates `oclr_test`, and starts `npm run dev` on port 3000. Synthetic editions are `/tournaments/dev-s11` and `/tournaments/dev-archive`. `/api/health` returns `{"status":"ok"}` when the preview database answers.
+- `npm run db:local` is the Docker setup in the development guide. This machine keeps PostgreSQL running as a host service, so use the connection above.
+- osu! OAuth settings are unset. Public pages and the synthetic preview load without them. Sign-in still needs an approved OAuth application.
+
 ## Recorded organizer evidence
 
 - #10 release rehearsal was confirmed passed by the organizer on 2026-10-23, including the requested multi-account captain/staff workflow, conflicts, pause/reconnect and spectator/OBS checks. Earlier live OAuth/API, Rocky/Nginx HTTPS deploy/update, two staging upgrades (one migration) and backup restore also have organizer-attested evidence. Preserve the distinction from agent-performed local tests; do not reopen the completed rehearsal gate merely because synthetic tests alone cannot establish it. CI status and the dated development-tool maintenance exception remain separately tracked; never describe pending CI as passed. The organizer approved the current Chinese interface wording, including privacy/consent and competition terminology, on 2026-10-22 under #72. Future substantive Chinese wording changes still require organizer review. Follow docs/deployment.md and report remaining gates accurately.
